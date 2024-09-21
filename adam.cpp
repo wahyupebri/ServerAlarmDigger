@@ -12,7 +12,7 @@
 #include "adam.h"
 #include "utils.h"
 #include <string.h>
-const char* DIGITALOUTPUTACTIVATE[] = { "DO1 = 1","DO2 = 1","DO3 = 1","DO4 = 1" };//nomor relay
+const char* DIGITALOUTPUTACTIVATE[] = { "DO0=1","DO1=1","DO2=1","DO3=1" };//nomor relay
 const char* AUTHORIZATION = "cm9vdDowMDAwMDAwMA==";
 size_t curlGetStatusCallback(void* ptr, size_t size, size_t nmemb, char** userdata) {
     size_t total = size * nmemb;
@@ -22,7 +22,7 @@ size_t curlGetStatusCallback(void* ptr, size_t size, size_t nmemb, char** userda
     //printf("%s\n", *userdata);
     return total;
 }
-int getStatusAdamRelay(char* ip, int relaynumber) {
+int getStatusAdamRelay(char* ip, int relaynumber) {//API GET http://ip/digitaloutput/0/value
     CURL* curl;
     CURLcode res;
     char* buffCurl = NULL;
