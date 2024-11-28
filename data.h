@@ -1,14 +1,14 @@
 #ifndef DATA_H
 #define DATA_H
 const int MACHINEMAXNUMBER = 10; //maximum jumlah mesin
-const int RELAYNO = 2;//nomor relay, default 0
-const int DELETEOLDERTHAN = 20;//minutes
+const int RELAYNO = 0;//nomor relay, default 0
+const int DELETEOLDERTHAN = 15;//minutes
 const int MAXALARMDURATION = 3600;//detik
 typedef struct data {
 	char ip[20];
 	int name;
 	int alarmStatus; //default 0
-	double totalDistance;//total perpindahan dalam 10 menit, default 0
+	double totalDistance;//total perpindahan, default 0
 	int isOnline;//default 0
 	int relayNo;//lihat RELAYNO
 	int isMaxDistance;//deafult 0

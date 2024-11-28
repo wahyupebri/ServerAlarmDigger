@@ -22,7 +22,7 @@ size_t curlGetStatusCallback(void* ptr, size_t size, size_t nmemb, char** userda
     //printf("%s\n", *userdata);
     return total;
 }
-int getStatusAdamRelay(char* ip, int relaynumber) {//API GET http://ip/digitaloutput/0/value
+int getStatusAdamRelay(char* ip, int relaynumber) {
     CURL* curl;
     CURLcode res;
     char* buffCurl = NULL;

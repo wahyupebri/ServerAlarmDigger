@@ -2,7 +2,68 @@
 #include "model.h"
 #include "utils.h"
 #include "data.h"
+double getSQLAlarmStatus(device* pDev) {//mendapatkan status alarm [update sep 2024]
+	MYSQL* conn;
+	MYSQL_RES* result;
+	MYSQL_ROW row;
+	conn = mysql_init(NULL);
+	if (conn == NULL) {
+		fprintf(stderr, "[ERROR] Model mysql_init() failed\n");
+		return 0;
+	}
+	if (mysql_real_connect(conn, "localhost", "root", "", "tracking_digger", 0, NULL, 0) == NULL) {
+		fprintf(stderr, "[ERROR] Model mysql_real_connect() failed\n");
+		mysql_close(conn);
+		return 0;
+	}
+	char query[200] = "SELECT * from machine where m_name=";
+	char convert[6];
+	convertIntToCharArray(pDev->name, convert, 5);
+	strcat(query, convert);
+	if (mysql_query(conn, query)) {
+		fprintf(stderr, "[ERROR] Model Query failed,%s, %s\n", query, mysql_error(conn));
+		mysql_close(conn);
+		return 0;
+	}
 
+	result = mysql_store_result(conn);
+	my_ulonglong rows = mysql_num_rows(result);
+	fprintf(stdout, "[INFO] Model %d has total rows %llu\n", pDev->name, rows);
+	position* arrayPosition = (position*)malloc(rows * sizeof(position));
+	position* pPosition = arrayPosition;
+	int counter = 0;
+	while ((row = mysql_fetch_row(result))) {
+		pPosition->seq = counter;
+		pPosition->x = convertCharToDouble(row[3]);
+		pPosition->y = convertCharToDouble(row[4]);
+		counter++;
+		pPosition++;
+	}
+	double total = 0;
+	for (int a = 0; a < counter; a++) {
+		if (a > 1) {
+			double temp = isValidDistance(&arrayPosition[a - 1], &arrayPosition[a]);
+			if (temp > 0) {
+				total = total + temp;
+			}
+		}
+	}
+	if (isNotMoving(&arrayPosition[0], &arrayPosition[counter - 1], &pDev->BIAS)) {
+		total = isValidDistance(&arrayPosition[0], &arrayPosition[counter - 1]);
+		fprintf(stdout, "[INFO] Model Success connect to MySQL, %d still in range %f\n", pDev->name, total);
+	}
+	else {
+		total = total - pDev->BIAS;
+		if (total < 0) {
+			total = 0;
+		}
+	}
+	mysql_free_result(result);
+	free(arrayPosition);
+	fprintf(stdout, "[INFO] Model Success connect to MySQL, %d is moving %f\n", pDev->name, total);
+	mysql_close(conn);
+	return total;
+}
 double getSQLTotalDistance(device* pDev) {
 	MYSQL *conn;
 	MYSQL_RES* result;

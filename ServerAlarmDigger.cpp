@@ -10,16 +10,16 @@
 #include <thread>
 #include <vector>
 device devList[] = {
-    {"10.4.25.185",6206,0,0,0,RELAYNO,0,30,15,300,0},
-    {"10.4.25.145",6208,0,0,0,RELAYNO,0,30,15,300,0},
-    {"10.4.25.105",6210,0,0,0,RELAYNO,0,30,15,300,0},
-    {"10.4.25.45",6211,0,0,0,RELAYNO,0,30,15,300,0},
-    {"10.4.25.50",6212,0,0,0,RELAYNO,0,30,15,300,0},
-    {"10.4.34.175",6214,0,0,0,RELAYNO,0,30,15,300,0},
-    {"10.4.25.195",6215,0,0,0,RELAYNO,0,30,15,300,0},
-    {"10.4.25.150",6217,0,0,0,RELAYNO,0,30,15,300,0},
-    {"10.4.25.30",6218,0,0,0,RELAYNO,0,30,15,300,0},
-    {"10.4.25.35",6219,0,0,0,RELAYNO,0,30,15,300,0}
+    {"10.4.25.185",6206,0,0,0,RELAYNO,0,30,15,250,0},
+    {"10.4.25.145",6208,0,0,0,RELAYNO,0,30,15,250,0},
+    {"10.4.25.105",6210,0,0,0,RELAYNO,0,30,15,250,0},
+    {"10.4.25.45",6211,0,0,0,RELAYNO,0,30,15,250,0},
+    {"10.4.25.50",6212,0,0,0,RELAYNO,0,30,15,250,0},
+    {"10.4.34.175",6214,0,0,0,RELAYNO,0,30,15,250,0},
+    {"10.4.25.195",6215,0,0,0,RELAYNO,0,30,15,250,0},
+    {"10.4.25.150",6217,0,0,0,RELAYNO,0,30,15,250,0},
+    {"10.4.25.30",6218,0,0,0,RELAYNO,0,30,15,250,0},
+    {"10.4.25.35",6219,0,0,0,RELAYNO,0,30,15,250,0}
 };
 int threadMain(device *pDevice) {
     pDevice->totalDistance = getSQLTotalDistance(pDevice);
@@ -42,7 +42,7 @@ int threadMain(device *pDevice) {
             printf("[ERROR] Main %d exceed max distance but offline\n", pDevice->name);
             logSQL(pDevice, &pDevice->name, "Alarm failed to activate due to offline connection", 1, pDevice->isMaxDistance, pDevice->isOnline, getStatusAdamRelay(pDevice->ip, RELAYNO));
         }
-        char alarmstatus[100] = "Max distance reached since ";
+        char alarmstatus[100] = "Elapsed time (seconds) after reaching max distance is ";
         char convert[10];
         duration = (getTimeInMillis() - pDevice->timestamp) / 1000;
         convertIntToCharArray(duration, convert, 6);
@@ -54,17 +54,6 @@ int threadMain(device *pDevice) {
         pDevice->isMaxDistance = 0;
     }
 
-    if (pDevice->timestamp > 0) {//aktivasi timer 6 menit setelah adam aktif baru bisa dimatikan [update Sep 2024]
-        duration = (getTimeInMillis() - pDevice->timestamp)/1000;
-        printf("[INFO] Main %d alarm have already activated for  %lld secs\n", pDevice->name, duration);
-        if (duration < MAXALARMDURATION) {
-            setRelayOn(pDevice->ip, pDevice->relayNo);
-        }
-        else {
-            pDevice->timestamp = 0;
-            printf("[INFO] Main %d alarm have deactivated after  %lld secs\n", pDevice->name, duration);
-        }
-    }
     fprintf(stdout, "[INFO] Main Get status %d\n",pDevice->name);
     int relay = getStatusAdamRelay(pDevice->ip, pDevice->relayNo);//status relay yang ditentukan oleh RELAYNO
 
@@ -83,7 +72,17 @@ int threadMain(device *pDevice) {
     printf("[INFO] Main machine %d: relay is %d, connection is %d, distance is %f (%d)\n", pDevice->name, relay, pDevice->isOnline, pDevice->totalDistance, pDevice->isMaxDistance);
     setSQLStatus(pDevice, relay);
     //logSQL(pDevice, &pDevice->name, "Alarm failed to activate due to offline connection", 1, pDevice->isMaxDistance, pDevice->isOnline, relay);
-
+    if (pDevice->timestamp > 0) {//aktivasi timer 60 menit setelah adam aktif baru bisa dimatikan [update Sep 2024]
+        duration = (getTimeInMillis() - pDevice->timestamp) / 1000;
+        printf("[INFO] Main %d alarm have already activated for  %lld secs\n", pDevice->name, duration);
+        if (duration < MAXALARMDURATION) {
+            setRelayOn(pDevice->ip, pDevice->relayNo);
+        }
+        else {
+            pDevice->timestamp = 0;
+            printf("[INFO] Main %d alarm have deactivated after  %lld secs\n", pDevice->name, duration);
+        }
+    }
     
     return 0;
 }
